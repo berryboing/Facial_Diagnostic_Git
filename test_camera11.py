@@ -157,7 +157,7 @@ def save_to_database(email, dep, anx, str_score, frame, window, crop_y):
 def show_results_ui(dep_score, anx_score, str_score, captured_frame):
     root = tk.Tk()
     root.title("Facial Scanning Report")
-    root.geometry("650x650") 
+    root.geometry("650x480") # Shrunk window height to fit Pi screen perfectly
     root.configure(bg="#FFFFFF") 
 
     title_font = tkfont.Font(family="Helvetica", size=14, weight="bold")
@@ -174,14 +174,7 @@ def show_results_ui(dep_score, anx_score, str_score, captured_frame):
 
     tk.Label(root, text="Initial Assessment Results", font=title_font, bg="#FFFFFF", fg=text_dark).pack(pady=(10, 5))
 
-    # --- 2. TEMPORARY TESTING SCORES DISPLAY ---
-    test_frame = tk.Frame(root, bg="#E8DAEF", padx=10, pady=5, relief=tk.FLAT, borderwidth=1)
-    test_frame.pack(fill=tk.X, padx=20, pady=5)
-    tk.Label(test_frame, text="[TESTING VIEW - RAW SCORES]", font=header_font, bg="#E8DAEF", fg="#8E44AD").pack()
-    tk.Label(test_frame, text=f"Depression: {dep_score:.1f}%  |  Anxiety: {anx_score:.1f}%  |  Stress: {str_score:.1f}%", 
-             font=tkfont.Font(family="Helvetica", size=9, weight="bold"), bg="#E8DAEF", fg=text_dark).pack()
-
-    # --- 3. DYNAMIC TEXT GENERATION LOGIC ---
+    # --- 2. DYNAMIC TEXT GENERATION LOGIC ---
     slight_list = []
     increased_list = []
 
@@ -225,30 +218,38 @@ def show_results_ui(dep_score, anx_score, str_score, captured_frame):
             "Remember: Maintaining mental wellness is an ongoing process, and staying mindful of your well-being is a positive step forward."
         )
 
-    # --- 4. DISPLAY THE PARAGRAPH ---
+    # --- 3. DISPLAY THE PARAGRAPH ---
     text_frame = tk.Frame(root, bg=bg_gray, padx=15, pady=15, relief=tk.FLAT, borderwidth=1)
-    text_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=5)
+    text_frame.pack(fill=tk.X, expand=False, padx=30, pady=10) # Set to fill=tk.X so it hugs the text tightly
 
     message_label = tk.Label(text_frame, text=main_text, font=body_font, bg=bg_gray, fg=text_dark, wraplength=560, justify=tk.LEFT)
     message_label.pack(anchor="w")
 
-    # --- 5. SAVE TO CLOUD UI ---
+    # --- 4. SAVE TO CLOUD UI ---
     save_frame = tk.Frame(root, bg="#FFFFFF")
-    save_frame.pack(pady=10)
+    save_frame.pack(pady=5)
 
     tk.Label(save_frame, text="Enter email to save results and snapshots to database:", font=body_font, bg="#FFFFFF", fg=text_dark).pack()
     
     email_entry = tk.Entry(save_frame, width=40, font=body_font, bg="#ECF0F1", relief=tk.FLAT)
     email_entry.pack(pady=5, ipady=3) 
 
+    # We update root and calculate crop_y_bottom BEFORE rendering the test scores
+    # This ensures the test scores aren't accidentally captured in the screenshot!
     root.update()
-    
     crop_y_bottom = text_frame.winfo_y() + text_frame.winfo_height()
 
     submit_btn = tk.Button(save_frame, text="Save to Cloud", font=header_font, bg="#3498DB", fg="white", 
                            activebackground="#2980B9", activeforeground="white", relief=tk.FLAT, padx=15, pady=2,
                            command=lambda: save_to_database(email_entry.get(), dep_score, anx_score, str_score, captured_frame, root, crop_y_bottom))
     submit_btn.pack()
+
+    # --- 5. TEMPORARY TESTING SCORES DISPLAY (MOVED TO BOTTOM) ---
+    test_frame = tk.Frame(root, bg="#E8DAEF", padx=10, pady=5, relief=tk.FLAT, borderwidth=1)
+    test_frame.pack(fill=tk.X, padx=30, pady=(20, 10)) # Added 20px padding to the top so it doesn't touch the submit button
+    tk.Label(test_frame, text="[TESTING VIEW - RAW SCORES]", font=header_font, bg="#E8DAEF", fg="#8E44AD").pack()
+    tk.Label(test_frame, text=f"Depression: {dep_score:.1f}%  |  Anxiety: {anx_score:.1f}%  |  Stress: {str_score:.1f}%", 
+             font=tkfont.Font(family="Helvetica", size=9, weight="bold"), bg="#E8DAEF", fg=text_dark).pack()
 
     root.mainloop()
 
